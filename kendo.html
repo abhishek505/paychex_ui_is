@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Kendo UI Snippet</title>
+
+    <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.1.301/styles/kendo.default-v2.min.css" />
+
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://kendo.cdn.telerik.com/2022.1.301/js/kendo.all.min.js"></script>
+    <style>
+        .flex-container {
+            display: flex;
+            background: url("https://storage.googleapis.com/paychex_vanillajs/test/assets/paychex-back.png");
+        }
+        .background-container {
+            position: relative;
+            align-items: flex-end;
+        }
+        .chat-container{
+            position: relative;
+            align-items: flex-end;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="flex-container">
+        <div class="background-container"></div>
+        <div id="chat" class="chat-container" style="margin-right: 10px;height: 97vh;"></div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // The post event handler.
+            function onPost(args) {
+                var chat = args.sender;
+                console.log(args.text)
+                // Initiate an AJAX request and pass the args.text value.
+                // need to check the query
+                $.ajax({
+                    type: "POST",
+                    url: "https://eb01-2405-201-a405-b78-24cc-a279-fb05-2cc6.ngrok.io/api/v1/dialogflow/detect-intent",
+                    data: {
+                        "customParams": {
+                            "hideLanguageChips": true,
+                            "previousLanguageCode": "en",
+                            "timezoneOffset": -330,
+                            "role": localStorage.getItem("role"),
+                            "token": localStorage.getItem("token")
+                        },
+                        "isNewSession": true,
+                        "languageCode": "en",
+                        "message": args.text,
+                        "userId": "6044c2de-46f5-4635-9edc-d0c274072158"
+                    }
+                }).then(function (response) {
+                    // Retrieve the needed data from the received response.
+                    console.log(response)
+                    var text = response.data.queryResult.responseMessages[0].text.text[0]
+
+                    // Render a the returned text in the Chat.
+                    // Pass also the user (remote) info as a second parameter.
+                    chat.renderMessage({
+                        type: "text",
+                        text: text,
+                        timestamp: new Date()
+                    }, {
+                        name: "",
+                        iconUrl: "https://storage.googleapis.com/paychex_vanillajs/assets/bot.svg"
+                    });
+                }).fail(function (error) {
+                    console.log(error)
+                    // Handle failed AJAX.
+                })
+            }
+
+            // Initialize the Chat widget.
+            var chat = $("#chat").kendoChat({
+                post: onPost
+            }).data("kendoChat");
+
+            // Initially render a hint message to the user.
+            chat.renderMessage({
+                type: "text",
+                text: "Hi! I am Paychex virtual agent. How can I help you today?",
+                timestamp: new Date()
+            }, {
+                name: "",
+                iconUrl: "https://storage.googleapis.com/paychex_vanillajs/assets/bot.svg"
+            });
+        });
+    </script>
+</body>
+
+</html>
